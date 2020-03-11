@@ -1,10 +1,11 @@
+// IMPORT MODULES
 const express = require('express'); //express framework
 const userController = require('./../controllers/userController');
 
-//USER ROUTING - mount new router
+// MOUNT ROUTER
 const router = express.Router();
 
-//USER ROUTING
+// DEFINE THE ROUTES
 router
   .route('/')
   .get(userController.getAllUsers)
@@ -16,4 +17,5 @@ router
   .patch(userController.updateUser)
   .delete(userController.deleteUser);
 
+// EXPORT ROUTER
 module.exports = router;
