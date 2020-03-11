@@ -1,29 +1,29 @@
-exports.getAllUsers = (request, response) => {
-  response
+exports.getAllUsers = (req, res) => {
+  res
     .status(500)
     .json({ status: 'error', message: 'This route is note yet defined' });
 };
 
-exports.getUser = (request, response) => {
-  response
+exports.getUser = (req, res) => {
+  res
     .status(500)
     .json({ status: 'error', message: 'This route is note yet defined' });
 };
 
-exports.createUser = (request, response) => {
-  response
+exports.createUser = (req, res) => {
+  res
     .status(500)
     .json({ status: 'error', message: 'This route is note yet defined' });
 };
 
-exports.updateUser = (request, response) => {
-  response
+exports.updateUser = (req, res) => {
+  res
     .status(500)
     .json({ status: 'error', message: 'This route is note yet defined' });
 };
 
-exports.deleteUser = (request, response) => {
-  response
+exports.deleteUser = (req, res) => {
+  res
     .status(500)
     .json({ status: 'error', message: 'This route is note yet defined' });
 };
