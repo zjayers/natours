@@ -1,91 +1,154 @@
-const fs = require('fs'); //file system
+//  IMPORT MODULES
+const Tour = require('./../models/tourModel');
 
-// read JSON file (synchronous) and parse it
-const tourData = JSON.parse(
-  fs.readFileSync(`${__dirname}/../dev-data/data/tours-simple.json`)
-);
+/**
+ *!MIDDLEWARE
+ **ALIAS - TOP TOURS
+ * Middleware function to pre-fill the query string to show a predefined, commonly visited link
+ * @param {*} req
+ * @param {*} res
+ * @param {*} next
+ */
+exports.aliasTopTours = (req, res, next) => {
+  req.query.limit = '5';
+  req.query.sort = '-ratingsAverage,price';
+  req.query.fields = 'name,price,ratingsAverage,summary,difficulty';
+  next();
+};
 
-exports.checkID = (req, res, next, val) => {
-  if (parseInt(val) > tourData.length) {
-    return res.status(404).json({ status: 'fail', message: 'Invalid ID' });
+/**
+ **GET ALL TOURS
+ * TODO ERROR HANDLING
+ * @param {*} req HTTP request from user
+ * @param {*} res HTTP response to user
+ */
+exports.getAllTours = async (req, res) => {
+  try {
+    // BUILD THE QUERY
+    // FILTERING
+    const queryObj = { ...req.query };
+    const excludedFields = ['page', 'sort', 'limit', 'fields'];
+    excludedFields.forEach(element => {
+      delete queryObj[element];
+    });
+
+    // ADVANCED FILTERING - Operators - prepend gte, gt, lte, lt with '$'
+    let queryStr = JSON.stringify(queryObj);
+    queryStr = queryStr.replace(
+      /(\bgte|gt|lte|lt\b)/g,
+      matchedStr => `$${matchedStr}`
+    );
+
+    // RUN THE QUERY AND STORE THE RESPONSE FOR FURTHER PARSING
+    let query = Tour.find(JSON.parse(queryStr));
+
+    // SORTING if a sort variable is present in the query
+    if (req.query.sort) {
+      const sortBy = req.query.sort.split(',').join(' ');
+      query = query.sort(sortBy);
+    } else {
+      //If no sort field is specified - sort descending by createdAt Date
+      query = query.sort('-createdAt');
+    }
+
+    // FIELD LIMITING
+    if (req.query.fields) {
+      const fields = req.query.fields.split(',').join(' ');
+      query = query.select(fields);
+    } else {
+      //DEFAULT TO NOT INCLUDE FIELDS THAT SHOULD NOT NEED TO BE SENT
+      query = query.select('-__v');
+    }
+
+    //PAGINATION
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 100;
+    const skip = (page - 1) * limit;
+
+    query = query.skip(skip).limit(limit);
+
+    // Check if documents skipped is greater than the requested skip
+    if (req.query.page) {
+      const numTours = await Tour.countDocuments();
+      if (skip >= numTours) {
+        throw new Error('This page does not exist.');
+      }
+    }
+
+    // EXECUTE QUERY
+    const tours = await query;
+
+    //SEND RESPONSE TO USER
+    res
+      .status(200)
+      .json({ status: 'success', results: tours.length, data: { tours } });
+  } catch (error) {
+    res.status(404).json({ status: 'fail', message: 'Invalid Data Sent' });
   }
-  next();
 };
 
-exports.checkBody = (req, res, next) => {
-  if (!req.body.name || !req.body.price)
-    return res
-      .status(404)
-      .json({ status: 'fail', message: 'Missing name or price...' });
-  next();
+/**
+ **GET ONE TOUR
+ * TODO ERROR HANDLING
+ * @param {*} req HTTP request from user
+ * @param {*} res HTTP response to user
+ */
+exports.getTour = async (req, res) => {
+  try {
+    const tour = await Tour.findById(req.params.id);
+    res.status(200).json({ status: 'success', data: { tour } });
+  } catch (err) {
+    res.status(404).json({ status: 'fail', message: 'Invalid Data Sent' });
+  }
 };
 
-exports.getAllTours = (req, res) => {
-  //specify status code and send back JSON data
-  res.status(200).json({
-    status: 'success',
-    //Send length JSON array to client
-    reqedAt: req.reqTime,
-    results: tourData.length,
-    //send data to the client
-    data: {
-      tours: tourData
-    }
-  });
+/**
+ **CREATE TOURS
+ * TODO ERROR HANDLING
+ * @param {*} req HTTP request from user
+ * @param {*} res HTTP response to user
+ */
+exports.createTour = async (req, res) => {
+  try {
+    const newTour = await Tour.create(req.body);
+    res.status(201).json({ status: 'success', data: { tour: newTour } });
+  } catch (error) {
+    res.status(400).json({ status: 'fail', message: 'Invalid Data Sent' });
+  }
 };
 
-exports.getTour = (req, res) => {
-  //convert id string to int and find the corresponding item in the tourData array
-  const id = parseInt(req.params.id);
-
-  const tour = tourData.find(el => el.id === id);
-
-  res.status(200).json({
-    status: 'success',
-    data: {
-      tour
-    }
-  });
+/**
+ **UPDATE TOURS
+ * TODO ERROR HANDLING
+ * @param {*} req HTTP request from user
+ * @param {*} res HTTP response to user
+ */
+exports.updateTour = async (req, res) => {
+  try {
+    const tour = await Tour.findByIdAndUpdate(req.params.id, req.body, {
+      new: true, //Return the new document
+      runValidators: true //Validate that input values are of correct type
+    });
+    res.status(200).json({ status: 'success', data: { tour } });
+  } catch (err) {
+    res.status(400).json({ status: 'fail', message: 'Invalid Data Sent' });
+  }
 };
 
-exports.createTour = (req, res) => {
-  //create new id for object
-  //get id of last item in the tourData array and add 1 to it
-  const newId = tourData[tourData.length - 1].id + 1;
-  //merge the new id into the JSON object
-  const newTour = Object.assign({ id: newId }, req.body);
-  //push the tour to the array
-  tourData.push(newTour);
-
-  //Write new tour to JSON file
-  fs.writeFile(
-    `${__dirname}/dev-data/data/tours-simple.json`,
-    JSON.stringify(tourData),
-    err => {
-      res.status(201).json({
-        status: 'success',
-        data: {
-          tour: newTour
-        }
-      });
-    }
-  );
-};
-
-exports.updateTour = (req, res) => {
-  res.status(200).json({
-    status: 'success',
-    data: {
-      tour: '<Updated tour here...>'
-    }
-  });
-};
-
-exports.deleteTour = (req, res) => {
-  res.status(204).json({
-    status: 'success',
-    data: {
-      tour: '<Tour deleted...>'
-    }
-  });
+/**
+ **DELETE ONE TOUR
+ * TODO ERROR HANDLING
+ * @param {*} req HTTP request from user
+ * @param {*} res HTTP response to user
+ */
+exports.deleteTour = async (req, res) => {
+  try {
+    await Tour.findByIdAndDelete(req.params.id);
+    res.status(204).json({
+      status: 'success',
+      data: null
+    });
+  } catch (err) {
+    res.status(400).json({ status: 'fail', message: 'Invalid Data Sent' });
+  }
 };
