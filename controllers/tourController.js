@@ -1,5 +1,6 @@
 //  IMPORT MODULES
 const Tour = require('./../models/tourModel');
+const APIFeatures = require('./../utils/apiFeatures');
 
 /**
  *!MIDDLEWARE
@@ -25,58 +26,14 @@ exports.aliasTopTours = (req, res, next) => {
 exports.getAllTours = async (req, res) => {
   try {
     // BUILD THE QUERY
-    // FILTERING
-    const queryObj = { ...req.query };
-    const excludedFields = ['page', 'sort', 'limit', 'fields'];
-    excludedFields.forEach(element => {
-      delete queryObj[element];
-    });
-
-    // ADVANCED FILTERING - Operators - prepend gte, gt, lte, lt with '$'
-    let queryStr = JSON.stringify(queryObj);
-    queryStr = queryStr.replace(
-      /(\bgte|gt|lte|lt\b)/g,
-      matchedStr => `$${matchedStr}`
-    );
-
-    // RUN THE QUERY AND STORE THE RESPONSE FOR FURTHER PARSING
-    let query = Tour.find(JSON.parse(queryStr));
-
-    // SORTING if a sort variable is present in the query
-    if (req.query.sort) {
-      const sortBy = req.query.sort.split(',').join(' ');
-      query = query.sort(sortBy);
-    } else {
-      //If no sort field is specified - sort descending by createdAt Date
-      query = query.sort('-createdAt');
-    }
-
-    // FIELD LIMITING
-    if (req.query.fields) {
-      const fields = req.query.fields.split(',').join(' ');
-      query = query.select(fields);
-    } else {
-      //DEFAULT TO NOT INCLUDE FIELDS THAT SHOULD NOT NEED TO BE SENT
-      query = query.select('-__v');
-    }
-
-    //PAGINATION
-    const page = parseInt(req.query.page, 10) || 1;
-    const limit = parseInt(req.query.limit, 10) || 100;
-    const skip = (page - 1) * limit;
-
-    query = query.skip(skip).limit(limit);
-
-    // Check if documents skipped is greater than the requested skip
-    if (req.query.page) {
-      const numTours = await Tour.countDocuments();
-      if (skip >= numTours) {
-        throw new Error('This page does not exist.');
-      }
-    }
+    const features = new APIFeatures(Tour.find(), req.query)
+      .filter()
+      .sort()
+      .limitFields()
+      .pageinate();
 
     // EXECUTE QUERY
-    const tours = await query;
+    const tours = await features.dbQuery;
 
     //SEND RESPONSE TO USER
     res
