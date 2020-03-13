@@ -6,9 +6,9 @@ const APIFeatures = require('./../utils/apiFeatures');
  *!MIDDLEWARE
  **ALIAS - TOP TOURS
  * Middleware function to pre-fill the query string to show a predefined, commonly visited link
- * @param {*} req
- * @param {*} res
- * @param {*} next
+ * @param {*} req The HTTP request
+ * @param {*} res The HTTP response sent to the user
+ * @param {*} next Middleware variable 'next'
  */
 exports.aliasTopTours = (req, res, next) => {
   req.query.limit = '5';
@@ -106,6 +106,87 @@ exports.deleteTour = async (req, res) => {
       data: null
     });
   } catch (err) {
+    res.status(400).json({ status: 'fail', message: 'Invalid Data Sent' });
+  }
+};
+
+/**
+ ** GET TOUR STATS
+ * Gets predefined stats with the aggregation pipeline
+ * @param {*} req The HTTP request object
+ * @param {*} res The HTTP response to the user
+ */
+exports.getTourStats = async (req, res) => {
+  try {
+    // Group by difficulty and calculate averages
+    const stats = await Tour.aggregate([
+      { $match: { ratingsAverage: { $gte: 4.5 } } },
+      {
+        $group: {
+          _id: '$difficulty',
+          numTours: { $sum: 1 },
+          numRatings: { $sum: '$ratingsQuantity' },
+          avgRating: { $avg: '$ratingsAverage' },
+          avgPrice: { $avg: '$price' },
+          minPrice: { $min: '$price' },
+          maxPrice: { $max: '$price' }
+        }
+      },
+      {
+        $sort: { avgPrice: 1 }
+      }
+    ]);
+
+    res.status(200).json({ status: 'success', data: { stats } });
+  } catch (error) {
+    res.status(400).json({ status: 'fail', message: 'Invalid Data Sent' });
+  }
+};
+
+/**
+ **GET MONTHLY PLAN
+ * Unwind and aggregate the tour data to show the busiest month of the given year
+ * @param {*} req HTTP request from user
+ * @param {*} res HTTP response to user
+ */
+exports.getMonthlyPlan = async (req, res) => {
+  try {
+    const year = parseInt(req.params.year, 10);
+    const plan = await Tour.aggregate([
+      { $unwind: '$startDates' },
+      {
+        $match: {
+          startDates: {
+            $gte: new Date(`${year}-01-01`),
+            $lte: new Date(`${year}-12-31`)
+          }
+        }
+      },
+      {
+        $group: {
+          _id: { $month: '$startDates' },
+          numToursStarts: { $sum: 1 },
+          tours: { $push: '$name' }
+        }
+      },
+      {
+        $addFields: { month: '$_id' }
+      },
+      {
+        $project: {
+          _id: 0
+        }
+      },
+      {
+        $sort: { numToursStarts: -1 }
+      },
+      {
+        $limit: 12
+      }
+    ]);
+
+    res.status(200).json({ status: 'success', data: { plan } });
+  } catch (error) {
     res.status(400).json({ status: 'fail', message: 'Invalid Data Sent' });
   }
 };
