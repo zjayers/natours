@@ -72,6 +72,24 @@ const handleValidationErrorDB = err => {
   return new AppError(msg, 400);
 };
 
+/**
+ ** HANDLE JSON WEB TOKEN ERROR
+ *
+ * @param {*} err
+ * @returns AppError
+ */
+const handleJsonWebTokenErrorDB = () =>
+  new AppError('Invalid token. Please log in again.', 401);
+
+/**
+ ** HANDLE JSON WEB TOKEN EXPIRED ERROR
+ *
+ * @param {*} err
+ * @returns AppError
+ */
+const handleTokenExpiredErrorDB = () =>
+  new AppError('Your token has expired! Please log in again.', 401);
+
 // !GLOBAL ERROR HANDLING MIDDLEWARE
 module.exports = (err, req, res, next) => {
   err.statusCode = err.statusCode || 500; //500 = InternalServerError
@@ -88,6 +106,8 @@ module.exports = (err, req, res, next) => {
     if (error.code === 11000) error = handleDuplicateFieldsDB(error);
     if (error.name === 'ValidationError')
       error = handleValidationErrorDB(error);
+    if (error.name === 'JsonWebTokenError') error = handleJsonWebTokenErrorDB();
+    if (error.name === 'TokenExpiredError') error = handleTokenExpiredErrorDB();
 
     sendErrorProd(error, res);
   }
