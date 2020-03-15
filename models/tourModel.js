@@ -80,7 +80,34 @@ const tourSchema = new mongoose.Schema(
     secretTour: {
       type: Boolean,
       default: false
-    }
+    },
+    startLocation: {
+      //GeoJSON Data
+      type: {
+        type: String,
+        default: 'Point',
+        enum: ['Point']
+      },
+      coordinates: [Number],
+      address: String,
+      description: String
+    },
+    locations: [
+      {
+        type: { type: String, default: 'Point', enum: ['Point'] },
+        coordinates: [Number],
+        address: String,
+        description: String,
+        day: Number
+      }
+    ],
+    guides: [
+      {
+        // Use mongoose to reference users from the database
+        type: mongoose.Schema.ObjectId,
+        ref: 'User'
+      }
+    ]
   },
   {
     // Option to output virtual properties from schema
@@ -106,12 +133,28 @@ tourSchema.pre('save', function(next) {
   next();
 });
 
+/* // USER ID FINDER MIDDLEWARE FOR GUIDES
+tourSchema.pre('save', async function(next) {
+  const userDocPromises = this.guides.map(async id => await User.findById(id));
+  this.guides = await Promise.all(userDocPromises);
+  next();
+}); */
+
 // **QUERY MIDDLEWARE
 // Run middleware for all queries that start with 'find'
 // Hide any tours that should be kept secret to standard users
 tourSchema.pre(/^find/, function(next) {
   // .this points to the current query
   this.find({ secretTour: { $ne: true } });
+  next();
+});
+
+// **GUIDES POPULATOR - PULL REFERENCES FROM 'USER'
+tourSchema.pre(/^find/, function(next) {
+  this.populate({
+    path: 'guides',
+    select: '-__v -passwordChangedAt'
+  });
   next();
 });
 

@@ -21,7 +21,6 @@ exports.aliasTopTours = (req, res, next) => {
 
 /**
  **GET ALL TOURS
- * TODO ERROR HANDLING
  * @param {*} req HTTP request from user
  * @param {*} res HTTP response to user
  */
@@ -44,15 +43,14 @@ exports.getAllTours = catchAsync(async (req, res, next) => {
 
 /**
  **GET ONE TOUR
- * TODO ERROR HANDLING
  * @param {*} req HTTP request from user
  * @param {*} res HTTP response to user
  */
 exports.getTour = catchAsync(async (req, res, next) => {
+  //Find one tour by its ID, then populate the guide data for the query
   const tour = await Tour.findById(req.params.id);
-
   if (!tour) {
-    throw new AppError('No tour found with that ID', 404);
+    return next(new AppError('No tour found with that ID', 404));
   }
 
   res.status(200).json({ status: 'success', data: { tour } });
@@ -60,7 +58,6 @@ exports.getTour = catchAsync(async (req, res, next) => {
 
 /**
  **CREATE TOURS
- * TODO ERROR HANDLING
  * @param {*} req HTTP request from user
  * @param {*} res HTTP response to user
  */
@@ -71,7 +68,6 @@ exports.createTour = catchAsync(async (req, res, next) => {
 
 /**
  **UPDATE TOURS
- * TODO ERROR HANDLING
  * @param {*} req HTTP request from user
  * @param {*} res HTTP response to user
  */
@@ -90,7 +86,6 @@ exports.updateTour = catchAsync(async (req, res, next) => {
 
 /**
  **DELETE ONE TOUR
- * TODO ERROR HANDLING
  * @param {*} req HTTP request from user
  * @param {*} res HTTP response to user
  */
