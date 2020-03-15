@@ -5,48 +5,56 @@ const validator = require('validator');
 const bcrypt = require('bcryptjs');
 
 // CREATE USER SCHEMA
-const userSchema = new mongoose.Schema({
-  role: {
-    type: String,
-    enum: ['user', 'guide', 'lead-guide', 'admin'],
-    default: 'user'
+const userSchema = new mongoose.Schema(
+  {
+    role: {
+      type: String,
+      enum: ['user', 'guide', 'lead-guide', 'admin'],
+      default: 'user'
+    },
+    name: {
+      type: String,
+      required: [true, 'Please tell us your name']
+    },
+    email: {
+      type: String,
+      required: [true, 'Please provide your email address'],
+      unique: true,
+      lowercase: true,
+      validate: [validator.isEmail, 'Please provide a valid email']
+    },
+    photo: {
+      type: String
+    },
+    password: {
+      type: String,
+      required: [true, 'Please provide a password'],
+      minlength: [8, 'A password must have greater or equal to 8 characters'],
+      select: false
+    },
+    passwordConfirm: {
+      type: String,
+      required: [true, 'Please confirm your password'],
+      validate: {
+        //!THIS VALIDATOR ONLY RUNS ON .CREATE() OR .SAVE()
+        validator: function(el) {
+          return el === this.password;
+        },
+        message: 'Passwords are not the same!'
+      }
+    },
+    passwordChangedAt: { type: Date },
+    passwordResetToken: String,
+    passwordResetExpires: Date,
+    active: { type: Boolean, default: true, select: false }
   },
-  name: {
-    type: String,
-    required: [true, 'Please tell us your name']
-  },
-  email: {
-    type: String,
-    required: [true, 'Please provide your email address'],
-    unique: true,
-    lowercase: true,
-    validate: [validator.isEmail, 'Please provide a valid email']
-  },
-  photo: {
-    type: String
-  },
-  password: {
-    type: String,
-    required: [true, 'Please provide a password'],
-    minlength: [8, 'A password must have greater or equal to 8 characters'],
-    select: false
-  },
-  passwordConfirm: {
-    type: String,
-    required: [true, 'Please confirm your password'],
-    validate: {
-      //!THIS VALIDATOR ONLY RUNS ON .CREATE() OR .SAVE()
-      validator: function(el) {
-        return el === this.password;
-      },
-      message: 'Passwords are not the same!'
-    }
-  },
-  passwordChangedAt: { type: Date },
-  passwordResetToken: String,
-  passwordResetExpires: Date,
-  active: { type: Boolean, default: true, select: false }
-});
+  {
+    // Option to output virtual properties from schema
+    // !NOTE: THESE VIRTUAL PROPERTIES CANNOT BE QUERIED
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
+  }
+);
 
 //!PASSWORD ENCRYPTION MIDDLEWARE
 userSchema.pre('save', async function(next) {
