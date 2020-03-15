@@ -1,13 +1,19 @@
 // IMPORT MODULES
+const crypto = require('crypto');
 const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
 
 // CREATE USER SCHEMA
 const userSchema = new mongoose.Schema({
+  role: {
+    type: String,
+    enum: ['user', 'guide', 'lead-guide', 'admin'],
+    default: 'user'
+  },
   name: {
     type: String,
-    required: [true, 'Please tell us you name']
+    required: [true, 'Please tell us your name']
   },
   email: {
     type: String,
@@ -36,7 +42,10 @@ const userSchema = new mongoose.Schema({
       message: 'Passwords are not the same!'
     }
   },
-  passwordChangedAt: { type: Date }
+  passwordChangedAt: { type: Date },
+  passwordResetToken: String,
+  passwordResetExpires: Date,
+  active: { type: Boolean, default: true, select: false }
 });
 
 //!PASSWORD ENCRYPTION MIDDLEWARE
@@ -47,7 +56,14 @@ userSchema.pre('save', async function(next) {
   next();
 });
 
-//!PASSWORD LOGIN COMPARISON
+//!HIDE INACTIVE USER MIDDLEWARE
+userSchema.pre(/^find/, function(next) {
+  //Only include active users
+  this.find({ active: { $ne: false } });
+  next();
+});
+
+//*PASSWORD LOGIN COMPARISON
 userSchema.methods.correctPassword = async function(
   candidatePassword,
   userPassword
@@ -55,7 +71,7 @@ userSchema.methods.correctPassword = async function(
   return await bcrypt.compare(candidatePassword, userPassword);
 };
 
-//!PASSWORD CHANGED MONITOR
+//*PASSWORD CHANGED MONITOR
 userSchema.methods.changedPasswordAfter = function(JWTTimestamp) {
   //If password has ever been changed - check it against the JWT timestamp
   if (this.passwordChangedAt) {
@@ -71,6 +87,32 @@ userSchema.methods.changedPasswordAfter = function(JWTTimestamp) {
 
   return false;
 };
+
+//*PASSWORD RESET TOKEN GENERATOR
+userSchema.methods.createPasswordResetToken = function() {
+  //Create random hex string to send to user as reset password
+  const resetToken = crypto.randomBytes(32).toString('hex');
+  //Hash the reset token
+  this.passwordResetToken = crypto
+    .createHash('sha256')
+    .update(resetToken)
+    .digest('hex');
+
+  // Set the token expiry for 10 minutes
+  this.passwordResetExpires = Date.now() + 10 * 60 * 1000;
+
+  // return the un-encrypted token - encrypted version will be kept in database
+  return resetToken;
+};
+
+//!'PASSWORD UPDATED AT' MIDDLEWARE
+userSchema.pre('save', function(next) {
+  if (!this.isModified('password') || this.isNew) return next();
+
+  // Subtract 1 second from the date.now to ensure the JWT Token is created after the password is changed
+  this.passwordChangedAt = Date.now() - 1000;
+  next();
+});
 
 // CREATE EXPORT MODEL
 const User = mongoose.model('User', userSchema);

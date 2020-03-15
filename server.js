@@ -13,7 +13,6 @@ process.on('uncaughtException', err => {
 // SET CONFIGURATION PATH
 dotenv.config({ path: './config.env' });
 const app = require('./app');
-
 // CONNECT TO CLOUD SERVER CLUSTER
 const DB = process.env.DATABASE.replace(
   '<PASSWORD>',
