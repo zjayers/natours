@@ -13,16 +13,23 @@ router.post('/login', authController.login);
 // *PASSWORD FORGOT/RESET ROUTES
 router.post('/forgotPassword', authController.forgotPassword);
 router.patch('/resetPassword/:token', authController.resetPassword);
-router.patch(
-  '/updateMyPassword',
+
+router.use(authController.protect); // Protect all routes below this middleware - require user to be logged in.
+
+router.patch('/updateMyPassword', authController.updatePassword);
+
+router.get(
+  '/me',
   authController.protect,
-  authController.updatePassword
+  userController.getMe,
+  userController.getUser
 );
 
-router.patch('/updateMe', authController.protect, userController.updateMe);
-router.delete('/deleteMe', authController.protect, userController.deleteMe);
+router.patch('/updateMe', userController.updateMe);
+router.delete('/deleteMe', userController.deleteMe);
 
-// DEFINE THE ROUTES
+router.use(authController.restrictTo('admin')); // Restrict all access to routes below this middleware - only admins may access
+
 router
   .route('/')
   .get(userController.getAllUsers)
@@ -31,7 +38,7 @@ router
 router
   .route('/:id')
   .get(userController.getUser)
-  .patch(userController.updateUser)
+  .patch(userController.updateUser) //do NOT update passwords with this
   .delete(userController.deleteUser);
 
 // EXPORT ROUTER

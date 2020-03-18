@@ -2,6 +2,13 @@
 const User = require('./../models/userModel');
 const catchAsync = require('./../utils/catchAsync');
 const AppError = require('./../utils/appError');
+const factory = require('./handlerFactory');
+
+//* Factory Functions
+exports.getAllUsers = factory.getAll(User);
+exports.getUser = factory.getOne(User);
+exports.updateUser = factory.updateOne(User);
+exports.deleteUser = factory.deleteOne(User);
 
 /**
  * *Filter Request Body
@@ -17,7 +24,12 @@ const filterRequestBody = (obj, ...allowedFields) => {
   return filteredBody;
 };
 
-// *ALLOW USER TO UPDATE USER DATA
+exports.getMe = (req, res, next) => {
+  req.params.id = req.user.id;
+  next();
+};
+
+// *ALLOW USER TO UPDATE PERSONAL USER DATA
 exports.updateMe = catchAsync(async (req, res, next) => {
   // Create an error if the user POSTs password data
   if (req.body.password || req.body.passwordConfirm) {
@@ -43,47 +55,19 @@ exports.updateMe = catchAsync(async (req, res, next) => {
   res.status(200).json({ status: 'success', data: { user: updatedUser } });
 });
 
+//* Functionality for user to delete their account - this does not delete from the database
+//* It only sets the user account to inactive
 exports.deleteMe = catchAsync(async (req, res, next) => {
   await User.findByIdAndUpdate(req.user.id, { active: false });
 
   res.status(204).json({ status: 'success', data: null });
 });
 
-// *GET ALL USERS
-exports.getAllUsers = catchAsync(async (req, res) => {
-  // EXECUTE QUERY
-  const users = await User.find();
-
-  //SEND RESPONSE TO USER7
-  res
-    .status(200)
-    .json({ status: 'success', results: users.length, data: { users } });
-});
-
-// *GET ONE USER
-exports.getUser = (req, res) => {
-  res
-    .status(500)
-    .json({ status: 'error', message: 'This route is note yet defined' });
-};
-
-// *CREATE NEW USER
+// *CREATE USER - This is to remain an undefined route
 exports.createUser = (req, res) => {
-  res
-    .status(500)
-    .json({ status: 'error', message: 'This route is note yet defined' });
-};
-
-// *UPDATE USER
-exports.updateUser = (req, res) => {
-  res
-    .status(500)
-    .json({ status: 'error', message: 'This route is note yet defined' });
-};
-
-// *DELETE USER
-exports.deleteUser = (req, res) => {
-  res
-    .status(500)
-    .json({ status: 'error', message: 'This route is note yet defined' });
+  //SEND RESPONSE TO USER
+  res.status(500).json({
+    status: 'error',
+    message: 'This route is not defined. Use /signup instead'
+  });
 };

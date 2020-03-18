@@ -5,6 +5,7 @@ const dotenv = require('dotenv');
 //!LISTENER FOR UNCAUGHT EXCEPTIONS
 // Safety net in case exceptions are not caught explicitly
 process.on('uncaughtException', err => {
+  console.log(err);
   console.log(err.name, err.message);
   console.log('UNHANDLED EXCEPTION! Shutting Down...');
   process.exit(1);
