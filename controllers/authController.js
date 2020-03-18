@@ -19,7 +19,7 @@ const createSendToken = (user, statusCode, res) => {
   const token = signToken(user._id);
   const cookieOptions = {
     expires: new Date(
-      Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
+      Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000 //Convert to milliseconds
     ),
     httpOnly: true
   };
@@ -67,6 +67,15 @@ exports.login = catchAsync(async (req, res, next) => {
   createSendToken(user, 200, res);
 });
 
+//* LOGOUT METHOD
+exports.logout = (req, res) => {
+  res.cookie('jwt', 'loggedout', {
+    expires: new Date(Date.now() + 10 * 1000),
+    httpOnly: true
+  });
+  res.status(200).json({ status: 'success' });
+};
+
 //!PROTECTED ROUTE MIDDLEWARE
 exports.protect = catchAsync(async (req, res, next) => {
   // Get the token from the user
@@ -78,6 +87,8 @@ exports.protect = catchAsync(async (req, res, next) => {
     req.headers.authorization.startsWith('Bearer')
   ) {
     token = req.headers.authorization.split(' ')[1];
+  } else if (req.cookies.jwt) {
+    token = req.cookies.jwt;
   }
 
   if (!token) {
@@ -107,6 +118,39 @@ exports.protect = catchAsync(async (req, res, next) => {
   //Grant access to the protected route
   next();
 });
+
+//this function will test the req.cookies.jwt value to see if it's null
+Object.exists = function(obj) {
+  return typeof obj !== 'undefined' && obj !== null;
+};
+
+//!MIDDLEWARE TO CHECK WHEN USER IS LOGGED IN
+exports.isLoggedIn = async (req, res, next) => {
+  if (!Object.exists(res.cookie.jwt)) {
+    //This is where we check whether the cookie is null
+    return next();
+  }
+
+  if (req.cookies.jwt === 'loggedout') return next();
+
+  // Verify the token is authentic - promisify the verify process so it can be awaited
+  const payload = await promisify(jwt.verify)(
+    req.cookies.jwt,
+    process.env.JWT_SECRET
+  );
+
+  // Check if the user still exists in database
+  const currentUser = await User.findById(payload.id);
+  if (!currentUser) return next();
+
+  // Check if the user has changed password after the token was issued
+  if (currentUser.changedPasswordAfter(payload.iat)) return next();
+
+  // THERE IS A LOGGED IN USER
+  // MAKE USER ACCESSIBLE TO PUG TEMPLATES
+  res.locals.user = currentUser;
+  return next();
+};
 
 //!RESTRICTED ROUTE MIDDLEWARE
 exports.restrictTo = (...roles) => {
