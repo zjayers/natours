@@ -64,6 +64,15 @@ userSchema.pre('save', async function(next) {
   next();
 });
 
+//!'PASSWORD UPDATED AT' MIDDLEWARE
+userSchema.pre('save', function(next) {
+  if (!this.isModified('password') || this.isNew) return next();
+
+  // Subtract 1 second from the date.now to ensure the JWT Token is created after the password is changed
+  this.passwordChangedAt = Date.now() - 1000;
+  next();
+});
+
 //!HIDE INACTIVE USER MIDDLEWARE
 userSchema.pre(/^find/, function(next) {
   //Only include active users
@@ -112,15 +121,6 @@ userSchema.methods.createPasswordResetToken = function() {
   // return the un-encrypted token - encrypted version will be kept in database
   return resetToken;
 };
-
-//!'PASSWORD UPDATED AT' MIDDLEWARE
-userSchema.pre('save', function(next) {
-  if (!this.isModified('password') || this.isNew) return next();
-
-  // Subtract 1 second from the date.now to ensure the JWT Token is created after the password is changed
-  this.passwordChangedAt = Date.now() - 1000;
-  next();
-});
 
 // CREATE EXPORT MODEL
 const User = mongoose.model('User', userSchema);

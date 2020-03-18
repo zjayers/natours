@@ -2,12 +2,13 @@
 const express = require('express'); //express framework
 const tourController = require('./../controllers/tourController');
 const authController = require('./../controllers/authController');
+const reviewRouter = require('./../routes/reviewRoutes');
 
 // MOUNT THE ROUTER
 const router = express.Router();
 
-// USE MIDDLEWARE PARAM TO CHECK ID AND RETURN 404 IF ID DOESN'T EXIST
-// router.param('id', tourController.checkID);
+// Direct tour router to use the review router if it encounters a review route
+router.use('/:tourId/reviews', reviewRouter);
 
 //ALIAS ROUTES - use middleware to change the request object and edit the query
 router
@@ -15,18 +16,38 @@ router
   .get(tourController.aliasTopTours, tourController.getAllTours);
 
 router.route('/tour-stats').get(tourController.getTourStats);
-router.route('/monthly-plan/:year').get(tourController.getMonthlyPlan);
+router
+  .route('/monthly-plan/:year')
+  .get(
+    authController.protect,
+    authController.restrictTo('admin', 'lead-guide', 'guide'),
+    tourController.getMonthlyPlan
+  );
 
-// DEFINE THE ROUTES
+// Route for finding tours within distance of coordinates
+router
+  .route('/tours-nearby/:distance/center/:latlng/unit/:unit')
+  .get(tourController.getToursNearby);
+
+router.route('/distances/:latlng/unit/:unit').get(tourController.getDistanceTo);
+
 router
   .route('/')
-  .get(authController.protect, tourController.getAllTours)
-  .post(authController.protect, tourController.createTour);
+  .get(tourController.getAllTours)
+  .post(
+    authController.protect,
+    authController.restrictTo('admin', 'lead-guide'),
+    tourController.createTour
+  );
 
 router
   .route('/:id')
   .get(tourController.getTour)
-  .patch(tourController.updateTour)
+  .patch(
+    authController.protect,
+    authController.restrictTo('admin', 'lead-guide'),
+    tourController.updateTour
+  )
   .delete(
     authController.protect,
     authController.restrictTo('admin', 'lead-guide'),

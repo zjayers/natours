@@ -60,7 +60,8 @@ const tourSchema = new mongoose.Schema(
       type: Number,
       default: 4.5,
       min: [1, 'Rating must be above 1.0'],
-      max: [5, 'Rating must be below 5.0']
+      max: [5, 'Rating must be below 5.0'],
+      set: val => Math.round(val * 10) / 10 //Round values to 1 decimal place - exp. 4.6 * 10 = 46.6 -- rounded is 47 -- /10 = 4.7
     },
     ratingsQuantity: {
       type: Number,
@@ -117,10 +118,22 @@ const tourSchema = new mongoose.Schema(
   }
 );
 
+// * INDEXES
+tourSchema.index({ price: 1, ratingsAverage: -1 });
+tourSchema.index({ slug: 1 }); //1 - ascending, -1 - descending
+tourSchema.index({ startLocation: '2dsphere' }); //Start location should be indexed to a 2D Sphere
+
 // *VIRTUAL PROPERTIES
 // Determine the number of weeks in the tour duration
 tourSchema.virtual('durationWeeks').get(function() {
   return this.duration / 7;
+});
+
+// Virtual Populate
+tourSchema.virtual('reviews', {
+  ref: 'Review',
+  foreignField: 'tour',
+  localField: '_id' // This is the variable used in the Review model
 });
 
 // **DOCUMENT MIDDLEWARE
@@ -159,14 +172,14 @@ tourSchema.pre(/^find/, function(next) {
 });
 
 // **AGGREGATION MIDDLEWARE
-// Run middleware for all queries that start with 'aggregate'
+/* // Run middleware for all queries that start with 'aggregate'
 // Hide any tours that should be kept secret to standard users
 tourSchema.pre('aggregate', function(next) {
   //.this points to the current aggregation
   //add a new match filter to the beginning of the pipeline array
   this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
   next();
-});
+}); */
 
 // CREATE EXPORT MODEL
 const Tour = mongoose.model('Tour', tourSchema);
