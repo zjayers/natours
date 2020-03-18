@@ -6,13 +6,21 @@ const AppError = require('./../utils/appError');
  * @param {*} err
  * @param {*} res
  */
-const sendErrorDev = (err, res) => {
-  res.status(err.statusCode).json({
-    status: err.status,
-    error: err,
-    message: err.message,
-    stack: err.stack
-  });
+const sendErrorDev = (err, req, res) => {
+  //API
+  if (req.originalUrl.startsWith('/api')) {
+    return res.status(err.statusCode).json({
+      status: err.status,
+      error: err,
+      message: err.message,
+      stack: err.stack
+    });
+  }
+  // RENDERED WEBSITE
+  console.error('ERROR', err);
+  return res
+    .status(err.statusCode)
+    .render('error', { title: 'Something went wrong', msg: err.message });
 };
 
 /**
@@ -21,19 +29,38 @@ const sendErrorDev = (err, res) => {
  * @param {*} err
  * @param {*} res
  */
-const sendErrorProd = (err, res) => {
-  //Operational, trusted error: Send Message to client
-  if (err.isOperational) {
-    res.status(err.statusCode).json({
-      status: err.status,
-      message: err.message
-    });
-    // Programming or other unknown error: don't leak details to client - send generic message instead
-  } else {
+const sendErrorProd = (err, req, res) => {
+  if (req.originalUrl.startsWith('/api')) {
+    //Operational, trusted error: Send Message to client
+    if (err.isOperational) {
+      return res.status(err.statusCode).json({
+        status: err.status,
+        message: err.message
+      });
+      // Programming or other unknown error: don't leak details to client - send generic message instead
+    }
+
     //Log error to the console
     console.error('ERROR', err);
-    res.status(500).json({ status: 'error', message: 'Something went wrong' });
+    return res
+      .status(500)
+      .json({ status: 'error', message: 'Something went wrong' });
   }
+
+  // RENDERED WEBSITE
+  if (err.isOperational) {
+    return res
+      .status(err.statusCode)
+      .render('error', { title: 'Something went wrong', msg: err.message });
+    // Programming or other unknown error: don't leak details to client - send generic message instead
+  }
+
+  //Log error to the console
+  console.error('ERROR', err);
+  return res.status(err.statusCode).render('error', {
+    title: 'Something went wrong',
+    msg: 'Please try again later.'
+  });
 };
 
 /**
@@ -96,10 +123,11 @@ module.exports = (err, req, res, next) => {
   err.status = err.status || 'error';
 
   if (process.env.NODE_ENV === 'development') {
-    sendErrorDev(err, res);
+    sendErrorDev(err, req, res);
   } else if (process.env.NODE_ENV === 'production') {
     // make a hard copy of the function variable
     let error = { ...err };
+    error.message = err.message;
 
     // handle misc operational errors
     if (error.name === 'CastError') error = handleCastErrorDB(error);
@@ -109,7 +137,7 @@ module.exports = (err, req, res, next) => {
     if (error.name === 'JsonWebTokenError') error = handleJsonWebTokenErrorDB();
     if (error.name === 'TokenExpiredError') error = handleTokenExpiredErrorDB();
 
-    sendErrorProd(error, res);
+    sendErrorProd(error, req, res);
   }
 
   next();
