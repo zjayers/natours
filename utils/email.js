@@ -1,39 +1,75 @@
 // IMPORT MODULES
 const nodemailer = require('nodemailer');
+const pug = require('pug');
+const htmlToText = require('html-to-text');
+const capitalize = require('./capitalize');
 
-const sendEmail = async options => {
-  // Create transporter
-  /* //GMAIL OPTION
-    const transporter = nodemailer.createTransport({
-        service: 'Gmail',
+module.exports = class Email {
+  constructor(user, url) {
+    this.to = user.email;
+    this.firstName = capitalize(user.name.toLowerCase().split(' ')[0]);
+    this.url = url;
+    this.from = `Natours Support <${process.env.EMAIL_FROM}`;
+  }
+
+  //* NEW TRANSPORT
+  newTransport() {
+    if (process.env.NODE_ENV === 'production') {
+      // SENDGRID
+      return nodemailer.createTransport({
+        service: 'SendGrid',
         auth: {
-            user: process.env.EMAIL_USERNAME,
-            password: process.env.EMAIL_PASSWORD
+          user: process.env.SENDGRID_USERNAME,
+          pass: process.env.SENDGRID_PASSWORD
         }
-
-        //Active the "less secure app" option in gmail
-    }) */
-
-  const transporter = nodemailer.createTransport({
-    host: process.env.EMAIL_HOST,
-    port: process.env.EMAIL_PORT,
-    auth: {
-      user: process.env.EMAIL_USERNAME,
-      pass: process.env.EMAIL_PASSWORD
+      });
     }
-  });
+    // NODEMAILER TO MAILTRAP
+    return nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT,
+      auth: {
+        user: process.env.EMAIL_USERNAME,
+        pass: process.env.EMAIL_PASSWORD
+      }
+    });
+  }
 
-  // Define the email options
-  const mailOptions = {
-    from: 'Natours Support <support@zach.io',
-    to: options.email,
-    subject: options.subject,
-    text: options.message
-  };
+  //* SEND
+  async send(template, subject) {
+    // Render HTML for the email - based on a PUG template
+    const html = pug.renderFile(
+      `${__dirname}/../views/emails/${template}.pug`,
+      {
+        firstName: this.firstName,
+        url: this.url,
+        subject
+      }
+    );
 
-  // Send email with nodemailer
-  await transporter.sendMail(mailOptions);
+    // Define the email options
+    const mailOptions = {
+      from: this.from,
+      to: this.to,
+      subject,
+      html,
+      text: htmlToText.fromString(html)
+    };
+
+    // Create a transport and send email
+    await this.newTransport().sendMail(mailOptions);
+  }
+
+  //* SEND WELCOME
+  async sendWelcome() {
+    await this.send('welcome', 'Welcome To Natours!');
+  }
+
+  //* PASSWORD RESTET
+  async sendPasswordReset() {
+    await this.send(
+      'passwordReset',
+      'Your Password Reset Token (Valid For 10 Minutes)'
+    );
+  }
 };
-
-//Export this module
-module.exports = sendEmail;

@@ -7,7 +7,7 @@
     "start": "nodemon server.js",
     "start:prod": " SET NODE_ENV=production&& nodemon server.js",
     "debug": "ndb server.js",
-    "watch:js": "parcel watch ./public/js/index.js --out-dir ./public/js --out-file bundle.js",
+    "watch:js": "parcel watch ./public/js/index.js --out-dir ./public/js --out-file bundle.js --public-url /js",
     "build:js": "parcel watch ./public/js/index.js --out-dir ./public/js --out-file bundle.js"
   },
   "repository": {
@@ -32,16 +32,20 @@
     "express-rate-limit": "^5.1.1",
     "helmet": "^3.21.3",
     "hpp": "^0.2.3",
+    "html-to-text": "^5.1.1",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^5.9.4",
     "morgan": "^1.9.1",
+    "multer": "^1.4.2",
     "nodemailer": "^6.4.5",
     "pug": "^2.0.4",
+    "sharp": "^0.25.1",
     "slugify": "^1.4.0",
     "validator": "^12.2.0",
     "xss-clean": "^0.1.1"
   },
   "devDependencies": {
+    "cross-env": "^7.0.2",
     "eslint": "^6.8.0",
     "eslint-config-airbnb": "^18.0.1",
     "eslint-config-prettier": "^6.10.0",

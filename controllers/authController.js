@@ -4,7 +4,7 @@ const { promisify } = require('util');
 const User = require('./../models/userModel');
 const catchAsync = require('./../utils/catchAsync');
 const AppError = require('./../utils/appError');
-const sendEmail = require('./../utils/email');
+const Email = require('./../utils/email');
 
 // *JWT TOKEN SIGNER
 const signToken = id => {
@@ -24,7 +24,8 @@ const createSendToken = (user, statusCode, res) => {
     httpOnly: true
   };
 
-  if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
+  // ! LOGIN FUNCTIONALITY DOESNT WORK IN PRODUCTION UNLESS PROTOCOL IS HTTPS
+  //if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
 
   res.cookie('jwt', token, cookieOptions);
 
@@ -41,9 +42,11 @@ exports.signup = catchAsync(async (req, res) => {
     name: req.body.name,
     email: req.body.email,
     password: req.body.password,
-    passwordConfirm: req.body.passwordConfirm,
-    passwordChangedAt: req.body.passwordChangedAt
+    passwordConfirm: req.body.passwordConfirm
   });
+
+  const url = `${req.protocol}://${req.get('host')}/me`;
+  await new Email(newUser, url).sendWelcome();
   //Send the JWT Token
   createSendToken(newUser, 201, res);
 });
@@ -115,6 +118,8 @@ exports.protect = catchAsync(async (req, res, next) => {
 
   //Add user data to the request to use in next middleware function
   req.user = currentUser;
+  // MAKE USER ACCESSIBLE TO PUG TEMPLATES
+  res.locals.user = currentUser;
   //Grant access to the protected route
   next();
 });
@@ -126,30 +131,36 @@ Object.exists = function(obj) {
 
 //!MIDDLEWARE TO CHECK WHEN USER IS LOGGED IN
 exports.isLoggedIn = async (req, res, next) => {
+  //if the jwt stores the value of loggedout then pass on to the next Middleware
+  if (req.cookies.jwt === 'loggedout') return next();
+
+  if (req.cookies.jwt) {
+    // Verify the token is authentic - promisify the verify process so it can be awaited
+    const payload = await promisify(jwt.verify)(
+      req.cookies.jwt,
+      process.env.JWT_SECRET
+    );
+
+    // Check if the user still exists in database
+    const currentUser = await User.findById(payload.id);
+    if (!currentUser) return next();
+
+    // Check if the user has changed password after the token was issued
+    if (currentUser.changedPasswordAfter(payload.iat)) return next();
+
+    // THERE IS A LOGGED IN USER
+    //Add user data to the request to use in next middleware function
+    req.user = currentUser;
+    // MAKE USER ACCESSIBLE TO PUG TEMPLATES
+    res.locals.user = currentUser;
+
+    return next();
+  }
+
   if (!Object.exists(res.cookie.jwt)) {
     //This is where we check whether the cookie is null
     return next();
   }
-
-  if (req.cookies.jwt === 'loggedout') return next();
-
-  // Verify the token is authentic - promisify the verify process so it can be awaited
-  const payload = await promisify(jwt.verify)(
-    req.cookies.jwt,
-    process.env.JWT_SECRET
-  );
-
-  // Check if the user still exists in database
-  const currentUser = await User.findById(payload.id);
-  if (!currentUser) return next();
-
-  // Check if the user has changed password after the token was issued
-  if (currentUser.changedPasswordAfter(payload.iat)) return next();
-
-  // THERE IS A LOGGED IN USER
-  // MAKE USER ACCESSIBLE TO PUG TEMPLATES
-  res.locals.user = currentUser;
-  return next();
 };
 
 //!RESTRICTED ROUTE MIDDLEWARE
@@ -169,6 +180,7 @@ exports.restrictTo = (...roles) => {
 exports.forgotPassword = catchAsync(async (req, res, next) => {
   // Get user based on POST email address
   const user = await User.findOne({ email: req.body.email });
+  console.log(req.body);
   if (!user) {
     return next(new AppError('There is no user with this email address.', 404));
   }
@@ -177,21 +189,13 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
   const resetToken = user.createPasswordResetToken();
   await user.save({ validateBeforeSave: false });
 
-  //Send the token to user's email address
-  const resetURL = `${req.protocol}://${req.get(
-    'host'
-  )}/api/v1/users/resetPassword/${resetToken}`;
-
-  //Create the email message
-  const message = `Forgot your password? Submit a PATCH request with your new password and password confirm to ${resetURL}. \nIf you didn't forget your password, please ignore this email!`;
-
   try {
-    //Send the email
-    await sendEmail({
-      email: user.email,
-      subject: 'Your Password Reset Token (Valid For 10 Minutes)',
-      message
-    });
+    //Send the token to user's email address
+    const resetURL = `${req.protocol}://${req.get(
+      'host'
+    )}/resetPassword#${resetToken}`;
+
+    await new Email(user, resetURL).sendPasswordReset();
 
     res
       .status(200)

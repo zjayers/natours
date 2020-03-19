@@ -243,6 +243,13 @@ body {
   font-size: 1.4rem !important;
 }
 
+.btn--login {
+  width: 40%;
+}
+.btn--forgot {
+  float: right;
+}
+
 .btn-small,
 .btn-small:link,
 .btn-small:visited {
@@ -1221,7 +1228,9 @@ body {
   margin: 0 auto;
 }
 
-.login-form {
+.login-form,
+.signup-form,
+.reset-form {
   margin: 0 auto;
   max-width: 55rem;
   background-color: #fff;
