@@ -15,7 +15,7 @@ router.get('/logout', authController.logout);
 router.post('/forgotPassword', authController.forgotPassword);
 router.patch('/resetPassword/:token', authController.resetPassword);
 
-router.use(authController.protect); // Protect all routes below this middleware - require user to be logged in.
+//router.use(authController.protect); // Protect all routes below this middleware - require user to be logged in.
 
 router.patch('/updateMyPassword', authController.updatePassword);
 
@@ -26,10 +26,15 @@ router.get(
   userController.getUser
 );
 
-router.patch('/updateMe', userController.updateMe);
+router.patch(
+  '/updateMe',
+  userController.uploadUserPhoto,
+  userController.resizeUserPhoto,
+  userController.updateMe
+);
 router.delete('/deleteMe', userController.deleteMe);
 
-router.use(authController.restrictTo('admin')); // Restrict all access to routes below this middleware - only admins may access
+//router.use(authController.restrictTo('admin')); // Restrict all access to routes below this middleware - only admins may access
 
 router
   .route('/')
