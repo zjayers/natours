@@ -41,10 +41,18 @@ const server = app.listen(port, () => {
 //!LISTENER FOR UNHANDLED REJECTIONS
 // Safety net in case promise rejections are not caught explicitly
 process.on('unhandledRejection', err => {
-  console.log(err);
   console.log(err.name, err.message);
   console.log('UNHANDLED REJECTION! Shutting Down...');
   server.close(() => {
     process.exit(1);
+  });
+});
+
+//!LISTENER FOR SIGTERM SIGNAL
+process.on('SIGTERM', () => {
+  console.log('SIGTERM RECEIVED! Shutting Down');
+  server.close(() => {
+    console.log('PROCESS TERMINATED!');
+    //Sigterm shuts down the program here
   });
 });

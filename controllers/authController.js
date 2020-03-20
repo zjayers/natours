@@ -14,18 +14,17 @@ const signToken = id => {
 };
 
 // *JWT TOKEN SENDER
-const createSendToken = (user, statusCode, res) => {
+const createSendToken = (user, statusCode, req, res) => {
   //* Log the new user in as soon as they sign up
   const token = signToken(user._id);
+
   const cookieOptions = {
     expires: new Date(
       Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000 //Convert to milliseconds
     ),
-    httpOnly: true
+    httpOnly: true,
+    secure: req.secure || req.headers['x-forwarded-proto'] === 'https'
   };
-
-  // ! LOGIN FUNCTIONALITY DOESN'T WORK IN PRODUCTION UNLESS PROTOCOL IS HTTPS
-  if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
 
   res.cookie('jwt', token, cookieOptions);
 
@@ -48,7 +47,7 @@ exports.signup = catchAsync(async (req, res) => {
   const url = `${req.protocol}://${req.get('host')}/me`;
   await new Email(newUser, url).sendWelcome();
   //Send the JWT Token
-  createSendToken(newUser, 201, res);
+  createSendToken(newUser, 201, req, res);
 });
 
 //*LOGIN METHOD
@@ -67,7 +66,7 @@ exports.login = catchAsync(async (req, res, next) => {
   }
 
   //Send the JWT Token
-  createSendToken(user, 200, res);
+  createSendToken(user, 200, req, res);
 });
 
 //* LOGOUT METHOD
@@ -240,7 +239,7 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
   await user.save();
 
   //Send the JWT Token
-  createSendToken(user, 200, res);
+  createSendToken(user, 200, req, res);
 });
 
 // *Change User Password
@@ -259,5 +258,5 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
   await user.save();
 
   ///Send the JWT Token
-  createSendToken(user, 200, res);
+  createSendToken(user, 200, req, res);
 });
