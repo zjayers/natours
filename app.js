@@ -20,6 +20,9 @@ const bookingRouter = require('./routes/bookingRoutes');
 
 // INIT EXPRESS FRAMEWORK
 const app = express();
+app.enable('trust proxy');
+
+//* PUG TEMPLATE RENDERING
 app.set('view engine', 'pug'); // SET THE VIEW ENGINE
 app.set('views', path.join(__dirname, 'views'));
 
