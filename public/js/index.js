@@ -114,9 +114,9 @@ if (userPasswordForm) {
 if (bookBtn) {
   bookBtn.addEventListener('click', e => {
     e.target.textContent = 'Processing...';
-    console.log(e.target);
+    //console.log(e.target);
     const tourId = e.target.dataset.tourId;
-    console.log(tourId);
+    //console.log(tourId);
     bookTour(tourId);
   });
 }

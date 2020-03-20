@@ -6,12 +6,12 @@ import * as alert from './alerts';
 // Type is either 'password' or 'data'
 export const updateSettings = async (data, type) => {
   try {
-    console.log(data);
-    console.log(type);
+    //console.log(data);
+    //console.log(type);
     const url =
       type === 'password'
-        ? 'http://127.0.0.1:3000/api/v1/users/updateMyPassword'
-        : 'http://127.0.0.1:3000/api/v1/users/updateMe';
+        ? '/api/v1/users/updateMyPassword'
+        : '/api/v1/users/updateMe';
     const res = await axios({
       method: 'PATCH',
       url,
@@ -21,7 +21,7 @@ export const updateSettings = async (data, type) => {
       alert.showAlert('success', `${capitalize(type)} updated successfully!`);
     }
   } catch (err) {
-    console.log(err);
+    //console.log(err);
     alert.showAlert('error', err.response.data.message);
   }
 };

@@ -24,7 +24,7 @@ mongoose
     useUnifiedTopology: true
   })
   .then(() => {
-    console.log('Database connection successful...');
+    //console.log('Database connection successful...');
   });
 
 //READ JSON file
@@ -40,9 +40,9 @@ const importData = async () => {
     await Tour.create(tours);
     await User.create(users);
     await Review.create(reviews);
-    console.log('Data uploaded!');
+    //console.log('Data uploaded!');
   } catch (error) {
-    console.log(error);
+    //console.log(error);
   }
 };
 
@@ -53,9 +53,9 @@ const deleteData = async () => {
     await User.deleteMany();
     await Review.deleteMany();
 
-    console.log('Data deleted!');
+    //console.log('Data deleted!');
   } catch (error) {
-    console.log(error);
+    //console.log(error);
   }
 };
 
