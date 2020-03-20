@@ -1,7 +1,6 @@
 // IMPORT MODULES
 const path = require('path');
 const express = require('express'); //express framework
-const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const mongoSanitize = require('express-mongo-sanitize');
@@ -9,6 +8,7 @@ const xssClean = require('xss-clean');
 const hpp = require('hpp');
 const cookieParser = require('cookie-parser');
 const compression = require('compression');
+const cors = require('cors');
 
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
@@ -25,6 +25,10 @@ app.enable('trust proxy');
 //* PUG TEMPLATE RENDERING
 app.set('view engine', 'pug'); // SET THE VIEW ENGINE
 app.set('views', path.join(__dirname, 'views'));
+
+//Implement CORS
+app.use(cors()); // Access-Control-Allow-Origin *
+app.options('*', cors());
 
 // SERVING STATIC FILES
 app.use(express.static(path.join(__dirname, 'public')));
