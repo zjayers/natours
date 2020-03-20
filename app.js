@@ -17,6 +17,7 @@ const userRouter = require('./routes/userRoutes');
 const reviewRouter = require('./routes/reviewRoutes');
 const viewRouter = require('./routes/viewRoutes');
 const bookingRouter = require('./routes/bookingRoutes');
+const bookingController = require('./controllers/bookingController');
 
 // INIT EXPRESS FRAMEWORK
 const app = express();
@@ -50,6 +51,13 @@ const limiter = rateLimit({
 
 // ADD RATE LIMITER TO THE API ROUTE
 app.use('/api', limiter);
+
+// * STRIPE WEBHOOK CHECKOUT
+app.post(
+  '/webhook-checkout',
+  express.raw({ type: 'application/json' }), //Body must be RAW for Stripe to parse
+  bookingController.webhookCheckout
+);
 
 // BODY PARSER - READ DATA FROM BODY INTO REQ.BODY
 app.use(express.json({ limit: '10kb' })); //Limit body to 10kb
