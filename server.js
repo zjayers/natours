@@ -41,6 +41,7 @@ const server = app.listen(port, () => {
 //!LISTENER FOR UNHANDLED REJECTIONS
 // Safety net in case promise rejections are not caught explicitly
 process.on('unhandledRejection', err => {
+  console.log(err);
   console.log(err.name, err.message);
   console.log('UNHANDLED REJECTION! Shutting Down...');
   server.close(() => {
