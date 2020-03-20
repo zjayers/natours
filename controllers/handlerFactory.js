@@ -17,7 +17,7 @@ exports.getAll = Model =>
       .pageinate();
 
     // EXECUTE QUERY
-    const doc = await features.dbQuery.explain();
+    const doc = await features.dbQuery;
 
     //SEND RESPONSE TO USER
     res.status(200).json({ status: 'success', results: doc.length, data: doc });

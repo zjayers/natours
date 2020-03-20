@@ -24,7 +24,7 @@ const createSendToken = (user, statusCode, res) => {
     httpOnly: true
   };
 
-  // ! LOGIN FUNCTIONALITY DOESNT WORK IN PRODUCTION UNLESS PROTOCOL IS HTTPS
+  // ! LOGIN FUNCTIONALITY DOESN'T WORK IN PRODUCTION UNLESS PROTOCOL IS HTTPS
   //if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
 
   res.cookie('jwt', token, cookieOptions);
