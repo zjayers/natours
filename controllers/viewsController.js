@@ -6,7 +6,7 @@ const catchAsync = require('./../utils/catchAsync');
 const AppError = require('./../utils/appError');
 
 //* OVERVIEW ROUTE
-exports.getOverview = catchAsync(async (req, res, next) => {
+exports.getOverview = catchAsync(async (req, res) => {
   // Get tour data from collection
   const tours = await Tour.find();
 
@@ -14,7 +14,7 @@ exports.getOverview = catchAsync(async (req, res, next) => {
 });
 
 //* TOUR ROUTE
-exports.getTour = catchAsync(async (req, res, next) => {
+exports.getTour = catchAsync(async (req, res) => {
   const tour = await Tour.findOne({ slug: req.params.slug }).populate({
     path: 'reviews',
     fields: 'review rating user'
