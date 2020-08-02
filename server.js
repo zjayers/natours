@@ -4,7 +4,7 @@ const dotenv = require('dotenv');
 
 //!LISTENER FOR UNCAUGHT EXCEPTIONS
 // Safety net in case exceptions are not caught explicitly
-process.on('uncaughtException', err => {
+process.on('uncaughtException', (err) => {
   console.log(err);
   console.log(err.name, err.message);
   console.log('UNHANDLED EXCEPTION! Shutting Down...');
@@ -26,7 +26,7 @@ mongoose
     useNewUrlParser: true,
     useCreateIndex: true,
     useFindAndModify: true,
-    useUnifiedTopology: true
+    useUnifiedTopology: true,
   })
   .then(() => {
     console.log('Database connection successful...');
@@ -40,7 +40,7 @@ const server = app.listen(port, () => {
 
 //!LISTENER FOR UNHANDLED REJECTIONS
 // Safety net in case promise rejections are not caught explicitly
-process.on('unhandledRejection', err => {
+process.on('unhandledRejection', (err) => {
   console.log(err.name, err.message);
   console.log('UNHANDLED REJECTION! Shutting Down...');
   server.close(() => {

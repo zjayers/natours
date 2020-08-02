@@ -20,8 +20,8 @@ module.exports = class Email {
         service: 'SendGrid',
         auth: {
           user: process.env.SENDGRID_USERNAME,
-          pass: process.env.SENDGRID_PASSWORD
-        }
+          pass: process.env.SENDGRID_PASSWORD,
+        },
       });
     }
     // NODEMAILER TO MAILTRAP
@@ -30,8 +30,8 @@ module.exports = class Email {
       port: process.env.EMAIL_PORT,
       auth: {
         user: process.env.EMAIL_USERNAME,
-        pass: process.env.EMAIL_PASSWORD
-      }
+        pass: process.env.EMAIL_PASSWORD,
+      },
     });
   }
 
@@ -43,7 +43,7 @@ module.exports = class Email {
       {
         firstName: this.firstName,
         url: this.url,
-        subject
+        subject,
       }
     );
 
@@ -53,7 +53,7 @@ module.exports = class Email {
       to: this.to,
       subject,
       html,
-      text: htmlToText.fromString(html)
+      text: htmlToText.fromString(html),
     };
 
     // Create a transport and send email

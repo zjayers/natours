@@ -20,7 +20,7 @@ class APIFeatures {
     // FILTERING
     const queryObj = { ...this.reqQuery };
     const excludedFields = ['page', 'sort', 'limit', 'fields'];
-    excludedFields.forEach(element => {
+    excludedFields.forEach((element) => {
       delete queryObj[element];
     });
 
@@ -28,7 +28,7 @@ class APIFeatures {
     let queryStr = JSON.stringify(queryObj);
     queryStr = queryStr.replace(
       /(\bgte|gt|lte|lt\b)/g,
-      matchedStr => `$${matchedStr}`
+      (matchedStr) => `$${matchedStr}`
     );
 
     // RUN THE QUERY AND STORE THE RESPONSE FOR FURTHER PARSING

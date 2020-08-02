@@ -5,7 +5,7 @@
  * @param {*} fn The function to return as an anonymous function to use at a later time
  * @returns The function to return as an anonymous function to use at a later time
  */
-module.exports = fn => {
+module.exports = (fn) => {
   return (req, res, next) => {
     fn(req, res, next).catch(next);
   };

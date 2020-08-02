@@ -39,7 +39,7 @@ const multerFilter = (req, file, callback) => {
 
 const upload = multer({
   storage: multerStorage,
-  fileFilter: multerFilter
+  fileFilter: multerFilter,
 });
 
 // * MULTER FILE UPLOAD
@@ -68,7 +68,7 @@ exports.resizeUserPhoto = catchAsync(async (req, res, next) => {
  */
 const filterRequestBody = (obj, ...allowedFields) => {
   const filteredBody = {};
-  Object.keys(obj).forEach(el => {
+  Object.keys(obj).forEach((el) => {
     if (allowedFields.includes(el)) filteredBody[el] = obj[el];
   });
   return filteredBody;
@@ -101,7 +101,7 @@ exports.updateMe = catchAsync(async (req, res, next) => {
     filteredReqBody,
     {
       new: true,
-      runValidators: true
+      runValidators: true,
     }
   );
 
@@ -121,6 +121,6 @@ exports.createUser = (req, res) => {
   //SEND RESPONSE TO USER
   res.status(500).json({
     status: 'error',
-    message: 'This route is not defined. Use /signup instead'
+    message: 'This route is not defined. Use /signup instead',
   });
 };

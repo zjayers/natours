@@ -33,7 +33,7 @@ if (mapBox) {
 
 // * LOGIN FORM
 if (loginForm) {
-  loginForm.addEventListener('submit', e => {
+  loginForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
@@ -43,7 +43,7 @@ if (loginForm) {
 
 // * SIGN UP
 if (signupForm) {
-  signupForm.addEventListener('submit', e => {
+  signupForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const name = document.getElementById('name').value;
     const email = document.getElementById('email').value;
@@ -55,7 +55,7 @@ if (signupForm) {
 
 //* RESET PASSWORD
 if (resetForm) {
-  resetForm.addEventListener('submit', e => {
+  resetForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const password = document.getElementById('password').value;
     const passwordConfirm = document.getElementById('passwordConfirm').value;
@@ -65,7 +65,7 @@ if (resetForm) {
 
 //* FORGOT PASSWORD
 if (forgotForm) {
-  forgotForm.addEventListener('submit', e => {
+  forgotForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const email = document.getElementById('email').value;
     forgotPassword(email);
@@ -79,7 +79,7 @@ if (logOutBtn) {
 
 // *USER DATA FORM
 if (userDataForm) {
-  userDataForm.addEventListener('submit', e => {
+  userDataForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const form = new FormData();
     form.append('name', document.getElementById('name').value);
@@ -91,7 +91,7 @@ if (userDataForm) {
 
 // *USER PASSWORD FORM
 if (userPasswordForm) {
-  userPasswordForm.addEventListener('submit', async e => {
+  userPasswordForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     document.querySelector('.btn--save-password').textContent = 'Updating...';
 
@@ -113,7 +113,7 @@ if (userPasswordForm) {
 
 // *BOOK BUTTON
 if (bookBtn) {
-  bookBtn.addEventListener('click', e => {
+  bookBtn.addEventListener('click', (e) => {
     e.target.textContent = 'Processing...';
     //console.log(e.target);
     const tourId = e.target.dataset.tourId;

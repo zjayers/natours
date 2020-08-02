@@ -2,12 +2,12 @@
 import axios from 'axios';
 import * as alert from './alerts';
 
-export const forgotPassword = async email => {
+export const forgotPassword = async (email) => {
   try {
     const res = await axios({
       method: 'POST',
       url: '/api/v1/users/forgotPassword',
-      data: { email }
+      data: { email },
     });
 
     if (res.data.status === 'success') {
