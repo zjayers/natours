@@ -7,7 +7,7 @@ export const signUp = async (name, email, password, passwordConfirm) => {
     const res = await axios({
       method: 'POST',
       url: '/api/v1/users/signup',
-      data: { name, email, password, passwordConfirm }
+      data: { name, email, password, passwordConfirm },
     });
 
     if (res.data.status === 'success') {

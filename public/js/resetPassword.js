@@ -8,7 +8,7 @@ export const resetPassword = async (password, passwordConfirm) => {
     const res = await axios({
       method: 'PATCH',
       url: `/api/v1/users/resetPassword/${token}`,
-      data: { password, passwordConfirm }
+      data: { password, passwordConfirm },
     });
 
     if (res.data.status === 'success') {

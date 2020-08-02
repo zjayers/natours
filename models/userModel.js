@@ -10,55 +10,55 @@ const userSchema = new mongoose.Schema(
     role: {
       type: String,
       enum: ['user', 'guide', 'lead-guide', 'admin'],
-      default: 'user'
+      default: 'user',
     },
     name: {
       type: String,
-      required: [true, 'Please tell us your name']
+      required: [true, 'Please tell us your name'],
     },
     email: {
       type: String,
       required: [true, 'Please provide your email address'],
       unique: true,
       lowercase: true,
-      validate: [validator.isEmail, 'Please provide a valid email']
+      validate: [validator.isEmail, 'Please provide a valid email'],
     },
     photo: {
       type: String,
-      default: 'default.jpg'
+      default: 'default.jpg',
     },
     password: {
       type: String,
       required: [true, 'Please provide a password'],
       minlength: [8, 'A password must have greater or equal to 8 characters'],
-      select: false
+      select: false,
     },
     passwordConfirm: {
       type: String,
       required: [true, 'Please confirm your password'],
       validate: {
         //!THIS VALIDATOR ONLY RUNS ON .CREATE() OR .SAVE()
-        validator: function(el) {
+        validator: function (el) {
           return el === this.password;
         },
-        message: 'Passwords are not the same!'
-      }
+        message: 'Passwords are not the same!',
+      },
     },
     passwordChangedAt: { type: Date },
     passwordResetToken: String,
     passwordResetExpires: Date,
-    active: { type: Boolean, default: true, select: false }
+    active: { type: Boolean, default: true, select: false },
   },
   {
     // Option to output virtual properties from schema
     // !NOTE: THESE VIRTUAL PROPERTIES CANNOT BE QUERIED
     toJSON: { virtuals: true },
-    toObject: { virtuals: true }
+    toObject: { virtuals: true },
   }
 );
 
 //!PASSWORD ENCRYPTION MIDDLEWARE
-userSchema.pre('save', async function(next) {
+userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next(); // Only run this function if the password has been modified
   this.password = await bcrypt.hash(this.password, 12); //<- 12 is the CPU cost of hashing
   this.passwordConfirm = undefined; // Remove the password confirm from the database - it is only needed for initial validation
@@ -66,7 +66,7 @@ userSchema.pre('save', async function(next) {
 });
 
 //!'PASSWORD UPDATED AT' MIDDLEWARE
-userSchema.pre('save', function(next) {
+userSchema.pre('save', function (next) {
   if (!this.isModified('password') || this.isNew) return next();
 
   // Subtract 1 second from the date.now to ensure the JWT Token is created after the password is changed
@@ -75,14 +75,14 @@ userSchema.pre('save', function(next) {
 });
 
 //!HIDE INACTIVE USER MIDDLEWARE
-userSchema.pre(/^find/, function(next) {
+userSchema.pre(/^find/, function (next) {
   //Only include active users
   this.find({ active: { $ne: false } });
   next();
 });
 
 //*PASSWORD LOGIN COMPARISON
-userSchema.methods.correctPassword = async function(
+userSchema.methods.correctPassword = async function (
   candidatePassword,
   userPassword
 ) {
@@ -90,7 +90,7 @@ userSchema.methods.correctPassword = async function(
 };
 
 //*PASSWORD CHANGED MONITOR
-userSchema.methods.changedPasswordAfter = function(JWTTimestamp) {
+userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
   //If password has ever been changed - check it against the JWT timestamp
   if (this.passwordChangedAt) {
     //Convert the date to milliseconds, then seconds, then to an integer
@@ -107,7 +107,7 @@ userSchema.methods.changedPasswordAfter = function(JWTTimestamp) {
 };
 
 //*PASSWORD RESET TOKEN GENERATOR
-userSchema.methods.createPasswordResetToken = function() {
+userSchema.methods.createPasswordResetToken = function () {
   //Create random hex string to send to user as reset password
   const resetToken = crypto.randomBytes(32).toString('hex');
   //Hash the reset token

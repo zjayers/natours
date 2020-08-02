@@ -29,12 +29,12 @@ const multerFilter = (req, file, callback) => {
 
 const upload = multer({
   storage: multerStorage,
-  fileFilter: multerFilter
+  fileFilter: multerFilter,
 });
 
 exports.uploadTourImages = upload.fields([
   { name: 'imageCover', maxCount: 1 },
-  { name: 'images', maxCount: 3 }
+  { name: 'images', maxCount: 3 },
 ]);
 
 exports.resizeTourImages = catchAsync(async (req, res, next) => {
@@ -102,12 +102,12 @@ exports.getTourStats = catchAsync(async (req, res, next) => {
         avgRating: { $avg: '$ratingsAverage' },
         avgPrice: { $avg: '$price' },
         minPrice: { $min: '$price' },
-        maxPrice: { $max: '$price' }
-      }
+        maxPrice: { $max: '$price' },
+      },
     },
     {
-      $sort: { avgPrice: 1 }
-    }
+      $sort: { avgPrice: 1 },
+    },
   ]);
 
   res.status(200).json({ status: 'success', data: { stats } });
@@ -127,31 +127,31 @@ exports.getMonthlyPlan = catchAsync(async (req, res, next) => {
       $match: {
         startDates: {
           $gte: new Date(`${year}-01-01`),
-          $lte: new Date(`${year}-12-31`)
-        }
-      }
+          $lte: new Date(`${year}-12-31`),
+        },
+      },
     },
     {
       $group: {
         _id: { $month: '$startDates' },
         numToursStarts: { $sum: 1 },
-        tours: { $push: '$name' }
-      }
+        tours: { $push: '$name' },
+      },
     },
     {
-      $addFields: { month: '$_id' }
+      $addFields: { month: '$_id' },
     },
     {
       $project: {
-        _id: 0
-      }
+        _id: 0,
+      },
     },
     {
-      $sort: { numToursStarts: -1 }
+      $sort: { numToursStarts: -1 },
     },
     {
-      $limit: 12
-    }
+      $limit: 12,
+    },
   ]);
 
   res.status(200).json({ status: 'success', data: { plan } });
@@ -175,7 +175,7 @@ exports.getToursNearby = catchAsync(async (req, res, next) => {
   const radius = unit === 'mi' ? distance / 3963.2 : distance / 6378.1;
 
   const tours = await Tour.find({
-    startLocation: { $geoWithin: { $centerSphere: [[lng, lat], radius] } } //latitude, longitude, radius in radians
+    startLocation: { $geoWithin: { $centerSphere: [[lng, lat], radius] } }, //latitude, longitude, radius in radians
   });
 
   res
@@ -203,22 +203,22 @@ exports.getDistanceTo = catchAsync(async (req, res, next) => {
         //!NOTE - GEONEAR MUST BE FIRST IN GEO AGGREGATION PIPELINE & MODEL MUST HAVE A GEOSPACIAL INDEX
         near: {
           type: 'Point',
-          coordinates: [lng * 1, lat * 1]
+          coordinates: [lng * 1, lat * 1],
         },
         distanceField: 'distance',
-        distanceMultiplier: multiplier //Convert to Kilometers
-      }
+        distanceMultiplier: multiplier, //Convert to Kilometers
+      },
     },
     {
       $project: {
         distance: 1,
-        name: 1
-      }
-    }
+        name: 1,
+      },
+    },
   ]);
 
   res.status(200).json({
     status: 'success',
-    data: { data: distances }
+    data: { data: distances },
   });
 });

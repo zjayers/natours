@@ -13,7 +13,7 @@ const sendErrorDev = (err, req, res) => {
       status: err.status,
       error: err,
       message: err.message,
-      stack: err.stack
+      stack: err.stack,
     });
   }
   // RENDERED WEBSITE
@@ -35,7 +35,7 @@ const sendErrorProd = (err, req, res) => {
     if (err.isOperational) {
       return res.status(err.statusCode).json({
         status: err.status,
-        message: err.message
+        message: err.message,
       });
       // Programming or other unknown error: don't leak details to client - send generic message instead
     }
@@ -59,7 +59,7 @@ const sendErrorProd = (err, req, res) => {
   console.error('ERROR', err);
   return res.status(err.statusCode).render('error', {
     title: 'Something went wrong',
-    msg: 'Please try again later.'
+    msg: 'Please try again later.',
   });
 };
 
@@ -69,7 +69,7 @@ const sendErrorProd = (err, req, res) => {
  * @param {*} err
  * @returns AppError
  */
-const handleCastErrorDB = err => {
+const handleCastErrorDB = (err) => {
   const msg = `Invalid ${err.path}: ${err.value}`;
   return new AppError(msg, 400);
 };
@@ -80,7 +80,7 @@ const handleCastErrorDB = err => {
  * @param {*} err
  * @returns AppError
  */
-const handleDuplicateFieldsDB = err => {
+const handleDuplicateFieldsDB = (err) => {
   // Get the duplicate name from between the quotes in the err.errmsg
   const value = err.errmsg.match(/(["'])(\\?.)*?\1/)[0];
   const msg = `Duplicate field value: ${value}. Please use another value!`;
@@ -93,8 +93,8 @@ const handleDuplicateFieldsDB = err => {
  * @param {*} err
  * @returns AppError
  */
-const handleValidationErrorDB = err => {
-  const errArr = Object.values(err.errors).map(el => el.message);
+const handleValidationErrorDB = (err) => {
+  const errArr = Object.values(err.errors).map((el) => el.message);
   const msg = `Invalid input data. ${errArr.join('. ')}`;
   return new AppError(msg, 400);
 };

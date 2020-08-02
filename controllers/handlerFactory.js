@@ -3,7 +3,7 @@ const AppError = require('./../utils/appError');
 const APIFeatures = require('./../utils/apiFeatures');
 
 //* GET ALL
-exports.getAll = Model =>
+exports.getAll = (Model) =>
   catchAsync(async (req, res, next) => {
     // To allow for nested routes
     let filter = {};
@@ -37,18 +37,18 @@ exports.getOne = (Model, popOptions) =>
   });
 
 // *CREATE ONE
-exports.createOne = Model =>
+exports.createOne = (Model) =>
   catchAsync(async (req, res, next) => {
     const doc = await Model.create(req.body);
     res.status(201).json({ status: 'success', data: doc });
   });
 
 // *UPDATE ONE
-exports.updateOne = Model =>
+exports.updateOne = (Model) =>
   catchAsync(async (req, res, next) => {
     const doc = await Model.findByIdAndUpdate(req.params.id, req.body, {
       new: true, //Return the new document
-      runValidators: true //Validate that input values are of correct type
+      runValidators: true, //Validate that input values are of correct type
     });
 
     if (!doc) {
@@ -59,7 +59,7 @@ exports.updateOne = Model =>
   });
 
 // *DELETE ONE - HANDLER FACTORY
-exports.deleteOne = Model =>
+exports.deleteOne = (Model) =>
   catchAsync(async (req, res, next) => {
     const doc = await Model.findByIdAndDelete(req.params.id);
 
@@ -69,6 +69,6 @@ exports.deleteOne = Model =>
 
     res.status(204).json({
       status: 'success',
-      data: null
+      data: null,
     });
   });

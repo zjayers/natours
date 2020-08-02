@@ -2,25 +2,25 @@
   "name": "natours",
   "version": "1.0.0",
   "description": "Learning node, express, and mongoDB",
-  "main": "app.js",
-  "scripts": {
-    "start": "node server.js",
-    "start:dev": "nodemon server.js",
-    "start:prod": " SET NODE_ENV=production&& nodemon server.js",
-    "debug": "ndb server.js",
-    "watch:js": "parcel watch ./public/js/index.js --out-dir ./public/js --out-file bundle.js --public-url /js",
-    "build:js": "parcel build ./public/js/index.js --out-dir ./public/js --out-file bundle.js"
+  "homepage": "https://github.com/zjayers/natours#readme",
+  "bugs": {
+    "url": "https://github.com/zjayers/natours/issues"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/zjayers/natours.git"
   },
-  "author": "Zach Ayers",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/zjayers/natours/issues"
+  "author": "Zach Ayers",
+  "main": "app.js",
+  "scripts": {
+    "build:js": "parcel build ./public/js/index.js --out-dir ./public/js --out-file bundle.js",
+    "debug": "ndb server.js",
+    "start": "node server.js",
+    "start:dev": "nodemon server.js",
+    "start:prod": " SET NODE_ENV=production&& nodemon server.js",
+    "watch:js": "parcel watch ./public/js/index.js --out-dir ./public/js --out-file bundle.js --public-url /js"
   },
-  "homepage": "https://github.com/zjayers/natours#readme",
   "dependencies": {
     "@babel/polyfill": "^7.8.7",
     "axios": "^0.19.2",
